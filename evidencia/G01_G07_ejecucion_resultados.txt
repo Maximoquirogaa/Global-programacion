@@ -1,0 +1,52 @@
+﻿================================================================================
+ EVALUACIÓN GLOBAL - VALIDACIÓN INTEGRAL CASOS G-01 A G-07
+ URL Base de Pruebas: http://127.0.0.1:8080/api
+ Marca temporal de sesión: 1794366090
+================================================================================
+
+[CASO G-07] Verificación de Salud del Sistema (Proxy + Backend + PostgreSQL)
+GET /health/ready -> Status 200: {"estado":"listo","base_de_datos":"conectada"}
+✓ G-07 Salud inicial superada con éxito.
+
+[CASO G-01] Catálogo de Libros, Búsqueda Parcial y Paginación
+GET /libros/?titulo=rayuela -> Status 200: 1 libros encontrados.
+GET /libros/?limit=1&offset=0 -> Status 200: Retornó 1 libro.
+GET /libros/?limit=1&offset=1 -> Status 200: Retornó ID #2.
+GET /libros/?titulo=inexistente_xyz_totalmente -> Status 200: []
+GET /libros/1 -> Status 200: Título 'Rayuela', Autores: ['Julio Cortázar']
+✓ G-01 Catálogo superado con éxito.
+
+[CASO G-02] Alta de Libro con Stock, Género y Autorías
+POST /libros/ -> Status 201: ID #7
+GET /libros/7 -> Confirmado stock=25 y 2 autorías.
+POST /libros/ (ISBN repetido) -> Status 409: Error de integridad: verifique que el ISBN no esté repetido y que la editorial, género y autores existan.
+✓ G-02 Alta de libro superada con éxito.
+
+[CASO G-03] Alta de Cliente y Consulta Individual por ID
+POST /clientes/ -> Status 201: ID #5
+GET /clientes/5 -> Status 200: Estudiante Global 1794366090 (estudiante_1794366090@frvm.utn.edu.ar)
+POST /clientes/ (Email repetido) -> Status 409: Ya existe un cliente registrado con ese correo electrónico.
+✓ G-03 Alta de cliente superada con éxito.
+
+[CASO G-04] Venta con Dos Renglones y Persistencia en PostgreSQL
+POST /ventas/ -> Status 201: Venta ID #3 con Total $208500.00
+GET /ventas/3 (post-recarga) -> Status 200: Total $208500.00
+✓ G-04 Venta de dos renglones superada con éxito.
+
+[CASO G-05] Precio Histórico tras Modificación de Catálogo
+PATCH /libros/1 -> Status 200: Nuevo precio en catálogo $90000.00
+Verificación de venta #3:
+  - Precio unitario histórico en renglón: $85000.00 (Esperado: $85000.00)
+  - Total general histórico: $208500.00 (Esperado: $208500.00)
+✓ G-05 Integridad de importes históricos superada con éxito.
+
+[CASO G-06] Validación de Rechazos (409 Cliente/Libro Inexistente, 422 Libros Repetidos)
+POST /ventas/ con cliente inexistente -> Status 409: Error de integridad: el cliente indicado no existe o los datos son inválidos.
+POST /ventas/ con libro inexistente -> Status 409: El libro con ID 999999 no existe en el catálogo.
+POST /ventas/ con libros repetidos -> Status 422
+GET /ventas/ -> Status 200: 2 ventas en historial (Esperado: 2).
+✓ G-06 Rechazos controlados y protección de historial superados con éxito.
+
+================================================================================
+ ¡TODAS LAS PRUEBAS G-01 A G-07 FUERON EJECUTADAS Y APROBADAS SATISFACTORIAMENTE!
+================================================================================

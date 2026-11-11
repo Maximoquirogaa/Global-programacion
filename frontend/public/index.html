@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Librería UTN — Integración y Despliegue</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="js/api.js" defer></script>
+    <script src="js/navegacion.js" defer></script>
+    <script src="js/catalogo.js" defer></script>
+    <script src="js/libros.js" defer></script>
+    <script src="js/clientes.js" defer></script>
+    <script src="js/ventas.js" defer></script>
+    <script src="js/historial.js" defer></script>
+</head>
+<body>
+    <header>
+        <h1>Librería UTN</h1>
+        <nav aria-label="Navegación principal">
+            <button type="button" data-target="vista-catalogo" class="activo" aria-current="page">Catálogo</button>
+            <button type="button" data-target="vista-libros">Libros</button>
+            <button type="button" data-target="vista-clientes">Clientes</button>
+            <button type="button" data-target="vista-ventas">Ventas</button>
+            <button type="button" data-target="vista-historial">Historial</button>
+        </nav>
+    </header>
+
+    <main>
+        <!-- VISTA CATÁLOGO (Ejercicio 1 y Caso G-01) -->
+        <section id="vista-catalogo" class="vista" aria-labelledby="titulo-catalogo">
+            <h2 id="titulo-catalogo">Catálogo de Libros</h2>
+            <form action="" method="GET">
+                <label for="buscar-titulo">Buscar por título:</label>
+                <input type="text" id="buscar-titulo" placeholder="Ej. Rayuela o Cien años de soledad">
+                <button type="submit">Buscar</button>
+            </form>
+
+            <p class="mensaje-estado" id="catalogo-estado"><strong>Estado:</strong> Cargando catálogo...</p>
+            <p class="mensaje-sin-resultados" id="catalogo-sin-resultados" hidden>No se encontraron libros que coincidan con la búsqueda.</p>
+            <p class="mensaje-vacio" id="catalogo-vacio" hidden>El catálogo está vacío. No hay libros registrados en el sistema.</p>
+            <p class="mensaje-error" id="catalogo-error" role="alert" aria-live="polite" hidden></p>
+
+            <div id="catalogo-modal-detalle" hidden></div>
+
+            <div class="contenedor-catalogo" id="contenedor-catalogo">
+                <!-- Renderizado dinámico desde js/catalogo.js -->
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" id="catalogo-prev" class="boton-secundario" disabled>&larr; Página Anterior</button>
+                <span id="catalogo-paginacion-info" style="font-weight: 600; color: var(--color-texto-suave);">Página 1</span>
+                <button type="button" id="catalogo-next" class="boton-secundario" disabled>Página Siguiente &rarr;</button>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- VISTA LIBROS (Ejercicio 2 y Casos G-02, G-05) -->
+        <section id="vista-libros" class="vista" aria-labelledby="titulo-libros" hidden>
+            <h2 id="titulo-libros">Gestión de Libros</h2>
+
+            <form action="" method="POST" novalidate>
+                <fieldset>
+                    <legend>Alta de Nuevo Libro</legend>
+
+                    <p>
+                        <label for="libro-titulo">Título *:</label><br>
+                        <input type="text" id="libro-titulo" placeholder="Ej. El Aleph" required>
+                    </p>
+
+                    <p>
+                        <label for="libro-isbn">ISBN *:</label><br>
+                        <input type="text" id="libro-isbn" placeholder="Ej. 978-950-07-0010-0" required>
+                    </p>
+
+                    <p>
+                        <label for="libro-precio">Precio unitario ($) *:</label><br>
+                        <input type="number" id="libro-precio" min="0.01" step="0.01" placeholder="0.00" required>
+                    </p>
+
+                    <p>
+                        <label for="libro-stock">Stock inicial (entero >= 0) *:</label><br>
+                        <input type="number" id="libro-stock" min="0" step="1" value="0" placeholder="0" required>
+                    </p>
+
+                    <p>
+                        <label for="libro-editorial">Editorial *:</label><br>
+                        <select id="libro-editorial" required>
+                            <option value="">Cargando editoriales desde la API...</option>
+                        </select>
+                    </p>
+
+                    <p>
+                        <label for="libro-genero">Género (opcional):</label><br>
+                        <select id="libro-genero">
+                            <option value="">«Sin clasificar»</option>
+                        </select>
+                    </p>
+
+                    <fieldset style="margin-top: 1rem; background-color: var(--color-fondo);">
+                        <legend>Autorías del Libro (mínimo 1 obligatoria)</legend>
+                        <p style="font-size: 0.9rem; margin-bottom: 0.5rem;">
+                            Ingrese el ID del autor, verifíquelo mediante <code>GET /autores/{id}</code> y agregue la autoría indicando rol y orden.
+                        </p>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: flex-end; margin-bottom: 0.5rem;">
+                            <div style="flex: 1 1 120px;">
+                                <label for="libro-autor-id">ID Autor *:</label>
+                                <input type="number" id="libro-autor-id" min="1" placeholder="Ej. 1" style="margin-bottom: 0;">
+                            </div>
+                            <div style="flex: 0 0 auto;">
+                                <button type="button" id="libro-autor-verificar" class="boton-secundario" style="margin-bottom: 0;">Verificar ID</button>
+                            </div>
+                            <div style="flex: 1 1 140px;">
+                                <label for="libro-autor-rol">Rol *:</label>
+                                <select id="libro-autor-rol" style="margin-bottom: 0;">
+                                    <option value="autor">autor</option>
+                                    <option value="coautor">coautor</option>
+                                    <option value="traductor">traductor</option>
+                                    <option value="ilustrador">ilustrador</option>
+                                </select>
+                            </div>
+                            <div style="flex: 0 1 90px;">
+                                <label for="libro-autor-orden">Orden *:</label>
+                                <input type="number" id="libro-autor-orden" min="1" value="1" style="margin-bottom: 0;">
+                            </div>
+                            <div style="flex: 0 0 auto;">
+                                <button type="button" id="libro-autor-agregar" style="margin-bottom: 0;">+ Agregar Autoría</button>
+                            </div>
+                        </div>
+
+                        <p id="libro-autor-info" style="font-size: 0.9rem; font-weight: 600; min-height: 1.2rem;"></p>
+
+                        <div class="tabla-contenedor" style="margin-top: 0.5rem;">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Autor Verificado</th>
+                                        <th>Rol</th>
+                                        <th>Orden</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabla-autores-libro">
+                                    <!-- Filas dinámicas de autorías agregadas -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </fieldset>
+
+                    <br>
+                    <button type="submit">Guardar Libro</button>
+                </fieldset>
+            </form>
+
+            <p class="mensaje-exito" id="libros-exito" hidden>Libro registrado correctamente.</p>
+            <p class="mensaje-error" id="libros-error" role="alert" aria-live="polite" hidden>No se pudo registrar el libro.</p>
+
+            <h3>Libros Registrados en Catálogo</h3>
+            <p class="mensaje-vacio" id="libros-vacio" hidden>No hay libros registrados en la base de datos.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>ISBN</th>
+                            <th>Editorial</th>
+                            <th>Género</th>
+                            <th>Stock</th>
+                            <th>Precio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-libros">
+                        <!-- Renderizado dinámico desde js/libros.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- VISTA CLIENTES (Ejercicio 2 y Caso G-03) -->
+        <section id="vista-clientes" class="vista" aria-labelledby="titulo-clientes" hidden>
+            <h2 id="titulo-clientes">Gestión de Clientes</h2>
+
+            <form action="" method="POST" novalidate>
+                <fieldset>
+                    <legend>Alta de Nuevo Cliente</legend>
+
+                    <p>
+                        <label for="cliente-nombre">Nombre Completo *:</label><br>
+                        <input type="text" id="cliente-nombre" placeholder="Ej. Juan Pérez" required>
+                    </p>
+
+                    <p>
+                        <label for="cliente-email">Correo Electrónico (Email) *:</label><br>
+                        <input type="email" id="cliente-email" placeholder="juan.perez@example.com" required>
+                    </p>
+
+                    <button type="submit">Guardar Cliente</button>
+                </fieldset>
+            </form>
+
+            <p class="mensaje-exito" id="clientes-exito" hidden>Cliente registrado correctamente.</p>
+            <p class="mensaje-error" id="clientes-error" role="alert" aria-live="polite" hidden>No se pudo registrar el cliente.</p>
+
+            <fieldset style="margin-bottom: var(--espacio-lg);">
+                <legend>Consultar Cliente por ID (GET /clientes/{id})</legend>
+                <p style="font-size: 0.9rem;">Verifique datos de un cliente registrado ingresando su identificador.</p>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                    <input type="number" id="cliente-buscar-id" min="1" placeholder="Ej. 1" style="max-width: 150px; margin-bottom: 0;">
+                    <button type="button" id="cliente-buscar-btn" class="boton-secundario">Buscar / Recuperar Cliente</button>
+                </div>
+                <div id="cliente-resultado-consulta" hidden style="margin-top: 0.5rem;"></div>
+            </fieldset>
+
+            <h3>Clientes Conocidos en Sesión</h3>
+            <p class="mensaje-vacio" id="clientes-vacio" hidden>No hay clientes cargados en la sesión.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre Completo</th>
+                            <th>Email</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-clientes">
+                        <!-- Renderizado dinámico desde js/clientes.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <hr>
+
+        <!-- VISTA VENTAS (Ejercicio 3 y Casos G-04, G-06) -->
+        <section id="vista-ventas" class="vista" aria-labelledby="titulo-ventas" hidden>
+            <h2 id="titulo-ventas">Registrar Venta</h2>
+
+            <form action="" method="POST">
+                <fieldset>
+                    <legend>Selección de Cliente</legend>
+                    <p>
+                        <label for="venta-cliente">Seleccionar de la lista:</label><br>
+                        <select id="venta-cliente">
+                            <option value="">Seleccione un cliente...</option>
+                        </select>
+                    </p>
+                    <p style="font-size: 0.9rem; margin-bottom: 0.25rem;">O ingresar ID directo (consulta GET /clientes/{id}):</p>
+                    <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                        <input type="number" id="venta-cliente-id-directo" min="1" placeholder="ID de cliente" style="max-width: 150px; margin-bottom: 0;">
+                        <button type="button" id="venta-cliente-verificar-btn" class="boton-secundario">Verificar Cliente</button>
+                    </div>
+                    <p id="venta-cliente-info" style="font-size: 0.95rem; font-weight: 600; min-height: 1.2rem;"></p>
+                </fieldset>
+
+                <fieldset style="margin-top: 1rem;">
+                    <legend>Agregar Libro a la Venta</legend>
+
+                    <p>
+                        <label for="venta-libro">Libro del catálogo:</label><br>
+                        <select id="venta-libro">
+                            <option value="">Seleccione un libro...</option>
+                        </select>
+                    </p>
+
+                    <p>
+                        <label for="venta-cantidad">Cantidad (entero positivo):</label><br>
+                        <input type="number" id="venta-cantidad" min="1" step="1" value="1">
+                    </p>
+
+                    <button type="button" id="agregar-renglon">+ Agregar Renglón al Borrador</button>
+                </fieldset>
+
+                <h3>Resumen de la Venta (Borrador en Memoria)</h3>
+                <p class="mensaje-vacio" id="ventas-vacio">No hay renglones en la venta.</p>
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Libro</th>
+                                <th>Precio Unitario (Catálogo)</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-renglones">
+                            <!-- Renderizado dinámico desde js/ventas.js -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <p id="ventas-total" style="font-size: 1.2rem;">
+                    <strong>Total Estimado:</strong> <span id="ventas-total-valor" style="color: var(--color-primario); font-weight: 700;">$0.00</span>
+                </p>
+
+                <button type="submit" id="confirmar-venta">Confirmar Venta</button>
+            </form>
+
+            <p class="mensaje-exito" id="ventas-exito" role="status" aria-live="polite" hidden>Venta confirmada correctamente.</p>
+            <p class="mensaje-error" id="ventas-error" role="alert" aria-live="polite" hidden>No se pudo confirmar la venta.</p>
+
+            <div id="ventas-comprobante-servidor" hidden></div>
+        </section>
+
+        <hr>
+
+        <!-- VISTA HISTORIAL (Ejercicio 3 y Casos G-04, G-05, G-07) -->
+        <section id="vista-historial" class="vista" aria-labelledby="titulo-historial" hidden>
+            <h2 id="titulo-historial">Historial de Ventas</h2>
+
+            <p class="mensaje-vacio" id="historial-vacio" hidden>No hay ventas registradas en el sistema.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID Venta</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Total Confirmado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-historial">
+                        <!-- Renderizado dinámico desde js/historial.js -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <button type="button" id="historial-prev" class="boton-secundario" disabled>&larr; Anterior</button>
+                <span id="historial-paginacion-info" style="font-weight: 600; color: var(--color-texto-suave);">Página 1</span>
+                <button type="button" id="historial-next" class="boton-secundario" disabled>Siguiente &rarr;</button>
+            </div>
+
+            <div id="historial-detalle" hidden>
+                <h3>Detalle Histórico de la Venta (GET /ventas/{id})</h3>
+                <p id="historial-detalle-info" style="margin-bottom: 0.5rem;"></p>
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Libro</th>
+                                <th>Precio Unitario Histórico</th>
+                                <th>Cantidad</th>
+                                <th>Subtotal Histórico</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-detalle-venta">
+                            <!-- Renderizado dinámico desde js/historial.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
