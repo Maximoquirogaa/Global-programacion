@@ -184,7 +184,7 @@ Si desea ejecutar el backend directamente con Python en el sistema anfitrión:
 
 ## 🧪 5. Casos de Prueba Verificados (G-01 a G-07)
 
-Todos los casos requeridos por la consigna fueron verificados exitosamente a través del proxy Nginx en `http://127.0.0.1:8080/api`:
+Todos los casos requeridos por la consigna fueron verificados exitosamente tanto en el entorno local (`http://127.0.0.1:8080/api`) como en el **entorno público desplegado en Easypanel** ([https://libreriafront.maximoquiroga.me](https://libreriafront.maximoquiroga.me)):
 
 | Caso | Escenario Evaluado | Resultado Observado | Estado |
 |---|---|---|:---:|
@@ -196,9 +196,9 @@ Todos los casos requeridos por la consigna fueron verificados exitosamente a tra
 | **G-06** | Rechazo: Venta con cliente/libro inexistente (409) y con renglones repetidos (422). Historial inalterado. | 409 Conflict y 422 Unprocessable Entity devueltos correctamente. Historial protegido sin alteraciones. | **APROBADO** |
 | **G-07** | Despliegue y salud: Construcción de imágenes Docker, verificación de `/health/ready` y persistencia. | 200 OK en `/health/ready` (`{"estado":"listo","base_de_datos":"conectada"}`). Proxy funcional. | **APROBADO** |
 
-Para reproducir la batería completa de pruebas automatizadas:
+Para reproducir la batería completa de pruebas automatizadas contra producción:
 ```bash
-python evidencia/ejecutar_casos_g01_g07.py "http://127.0.0.1:8080/api"
+python evidencia/ejecutar_casos_g01_g07.py "https://libreriafront.maximoquiroga.me/api"
 ```
 
 ---
@@ -208,4 +208,4 @@ python evidencia/ejecutar_casos_g01_g07.py "http://127.0.0.1:8080/api"
 - `backend/`: Código de la API, `Dockerfile`, `.dockerignore`, migraciones, `seed.py`, `env.example`.
 - `README.md`: Este informe de arquitectura y ejecución.
 - `DEPLOY.md`: Manual operativo para el despliegue en VPS con Easypanel.
-- `evidencia/`: Scripts de validación y registros de ejecución de los casos G-01 a G-07.
+- `evidencia/`: Script de validación, logs de ejecución, capturas de pantalla de la interfaz web y de Easypanel (`G01` a `G07`, `EP01` a `EP03`) e informe `INFORME_CASOS_G01_G07.md`.

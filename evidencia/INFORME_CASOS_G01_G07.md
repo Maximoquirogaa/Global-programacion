@@ -3,8 +3,8 @@
 **Materia:** Programación III — Tecnicatura Universitaria en Programación a Distancia (UTN)  
 **Evaluación:** Global — Integración y Despliegue  
 **Grupo:** Máximo Juan Cruz Quiroga, Fabrizio Simón, Franco Rios, Santino Barone  
-**Entorno de Ejecución:** Contenedores Docker (Proxy Nginx + API FastAPI + Base PostgreSQL)  
-**URL de Pruebas:** `http://127.0.0.1:8080/api`  
+**Entorno de Ejecución:** Contenedores Docker en VPS con Easypanel (Proxy Nginx + API FastAPI + Base PostgreSQL)  
+**URL de Pruebas:** `https://libreriafront.maximoquiroga.me/api` (y verificación previa en `http://127.0.0.1:8080/api`)  
 
 ---
 
@@ -41,6 +41,12 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
   4. `GET /libros/?titulo=inexistente_xyz_totalmente`: Retornó HTTP 200 OK con lista vacía `[]`. En el frontend se activó el mensaje `#catalogo-sin-resultados`.
   5. `GET /libros/1`: Retornó HTTP 200 OK con el detalle completo precargado, mostrando la autoría de Julio Cortázar con rol `autor` y orden `1`.
 
+- **Evidencia visual:**
+  - Listado y paginación: `G01_catalogo_listado.png`
+  - Búsqueda por título: `G01_catalogo_busqueda.png`
+  - Búsqueda sin coincidencias: `G01_catalogo_busqueda_vacia.png`
+  - Detalle del libro con autorías: `G01_catalogo_detalle_libro.png`
+
 ### Caso G-02 — Alta de Libro
 - **Objetivo:** Registrar un libro nuevo con stock, género opcional y autorías (`POST /libros/`), verificar su detalle y probar duplicado de ISBN (409 Conflict).
 - **Acciones y Resultados:**
@@ -49,6 +55,10 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
   3. Consulta `GET /libros/7`: Confirmó la persistencia en PostgreSQL con sus dos autorías precargadas sin consultas N+1.
   4. Repetición de `POST /libros/` con el mismo ISBN: Rechazado con HTTP 409 Conflict y mensaje `"Error de integridad: verifique que el ISBN no esté repetido..."`.
 
+- **Evidencia visual:**
+  - Alta exitosa (201 Created): `G02_alta_libro_exito.png`
+  - Rechazo por ISBN repetido (409 Conflict): `G02_alta_libro_409_isbn.png`
+
 ### Caso G-03 — Alta de Cliente
 - **Objetivo:** Registrar cliente con nombre y email (`POST /clientes/`), recuperarlo por ID (`GET /clientes/{id}`) y probar duplicado de email (409 Conflict).
 - **Acciones y Resultados:**
@@ -56,6 +66,10 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
   2. Respuesta: HTTP 201 Created con ID #5.
   3. Consulta `GET /clientes/5`: Retornó HTTP 200 OK con los datos del cliente persistido.
   4. Repetición de `POST /clientes/` con el mismo email: Rechazado con HTTP 409 Conflict y mensaje `"Ya existe un cliente registrado con ese correo electrónico."`.
+
+- **Evidencia visual:**
+  - Alta de cliente y consulta individual por ID: `G03_alta_cliente_y_consulta.png`
+  - Rechazo por email duplicado (409 Conflict): `G03_alta_cliente_409_email.png`
 
 ### Caso G-04 — Venta con Dos Renglones
 - **Objetivo:** Registrar una venta con cliente y dos renglones de libros (`POST /ventas/`), validar cálculo en servidor, verificar HTTP 201 y consultar detalle post-recarga.
@@ -66,6 +80,10 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
   2. Respuesta: HTTP 201 Created con venta ID #3 y total confirmado por el backend de `$208500.00`.
   3. Simulación de recarga (`F5`): Consulta `GET /ventas/3`: Devolvió el mismo detalle completo con fecha, cliente, renglones y total de `$208500.00`.
 
+- **Evidencia visual:**
+  - Confirmación de venta (201 Created): `G04_venta_confirmada_201.png`
+  - Historial persistido tras recargar la página: `G04_historial_post_recarga.png`
+
 ### Caso G-05 — Preservación de Importes Históricos tras Modificación de Catálogo
 - **Objetivo:** Modificar el precio de un libro mediante `PATCH /libros/{id}` y verificar que la venta registrada previamente conserva sus importes históricos inalterados.
 - **Acciones y Resultados:**
@@ -75,6 +93,9 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
      - El subtotal histórico se mantuvo en `$170000.00`.
      - El total general histórico de la venta se mantuvo exactamente en `$208500.00`.
 
+- **Evidencia visual:**
+  - Detalle de venta conservando importes históricos: `G05_precio_historico.png`
+
 ### Caso G-06 — Rechazos Controlados y Protección de Historial
 - **Objetivo:** Validar rechazo con HTTP 409 ante cliente o libro inexistente, rechazo con HTTP 422 ante renglones repetidos, y constatar que el historial no se corrompe.
 - **Acciones y Resultados:**
@@ -82,6 +103,10 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
   2. Venta con libro inexistente (`libro_id: 999999`): Rechazada con HTTP 409 Conflict.
   3. Venta con libros repetidos en dos renglones: Rechazada por validación de Pydantic con HTTP 422 Unprocessable Entity (`"Un mismo libro no puede aparecer en dos renglones de la misma venta."`).
   4. Consulta `GET /ventas/`: El historial de ventas mantuvo la cantidad exacta de ventas válidas sin registros espurios ni estados inconsistentes. En el frontend, el borrador de venta se conservó intacto.
+
+- **Evidencia visual:**
+  - Rechazo por ID inexistente (409 Conflict): `G06_ventas_idexistente.png`
+  - Rechazo por renglones repetidos (422 Unprocessable Entity): `G06_ventas_rechazo_422.png`
 
 ### Caso G-07 — Verificación de Despliegue y Salud
 - **Objetivo:** Comprobar la construcción de imágenes de frontend y backend, la resolución del proxy inverso de Nginx y la salud de la API.
@@ -92,4 +117,11 @@ RESULTADO GENERAL: 7 / 7 CASOS EXITOSOS (100% DE EFECTIVIDAD)
      ```json
      {"estado": "listo", "base_de_datos": "conectada"}
      ```
-  4. La aplicación completa corre integrada bajo el mismo origen HTTP.
+  4. La aplicación completa corre integrada bajo el mismo origen HTTPS en `https://libreriafront.maximoquiroga.me`.
+
+- **Evidencia visual de despliegue y ejecución:**
+  - Endpoint `/api/health/ready` en producción: `G07_health_ready.png`
+  - Servicios activos y deploys en Easypanel: `EP01_servicios_easypanel.png`, `EP01_deploys_funcionando.png`
+  - Configuración de `API_UPSTREAM` y dominio HTTPS: `EP02_config_frontend_upstream.png`, `EP02_dominio_frontend.png`
+  - Logs de migraciones Alembic y Uvicorn en producción: `EP03_backend_logs_migraciones.png`
+  - Ejecución completa del script automatizado contra producción: `Script_ejecucion_automatizada.png`

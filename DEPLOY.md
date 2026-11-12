@@ -16,12 +16,12 @@
 
 | Parámetro | Configuración / Valor |
 |---|---|
-| **Plataforma de Despliegue** | VPS administrada mediante Easypanel |
-| **URL Pública del Frontend (HTTPS)** | `https://libreria-frontend.tudominio.com` *(o subdominio asignado por la cátedra)* |
-| **Dominio del Backend** | **Ninguno (Privado).** El backend opera exclusivamente en la red interna de Docker. |
-| **Puerto Interno Frontend** | `80` (HTTP) |
-| **Puerto Interno Backend** | `8000` (HTTP) |
-| **Servicio de Base de Datos** | PostgreSQL (Servicio Postgres dentro del mismo proyecto de Easypanel) |
+| **Plataforma de Despliegue** | VPS administrada mediante Easypanel (Proyecto: `grupo_qrbs`) |
+| **URL Pública del Frontend (HTTPS)** | [https://libreriafront.maximoquiroga.me](https://libreriafront.maximoquiroga.me) |
+| **Dominio del Backend** | **Ninguno (Privado).** El servicio `back-libreria` opera exclusivamente en la red interna de Docker. |
+| **Puerto Interno Frontend** | `80` (HTTP) — Servicio `front_libreria` |
+| **Puerto Interno Backend** | `8000` (HTTP) — Servicio `back-libreria` (`API_UPSTREAM=grupo_qrbs_back-libreria:8000`) |
+| **Servicio de Base de Datos** | PostgreSQL (`db_libreria`, puerto interno `5432`) |
 | **Driver de Conexión** | `postgresql+asyncpg` |
 
 ---
@@ -115,11 +115,11 @@ El despliegue se organiza en tres servicios dentro del mismo proyecto de Easypan
    - Ruta relativa al Dockerfile: `Dockerfile`
 4. En la sección **Environment**, configurá la variable `API_UPSTREAM` apuntando al servicio backend:
    ```env
-   API_UPSTREAM=<nombre_interno_backend>:8000
+   API_UPSTREAM=grupo_qrbs_back-libreria:8000
    ```
-   *Ejemplo:* Si el proyecto se llama `grupo1` y el servicio es `backend`, el nombre suele ser `grupo1_backend:8000` o simplemente `backend:8000` según la resolución interna de Easypanel.
+   *(Formato `<nombre_proyecto>_<nombre_servicio>:8000` según la resolución interna de Easypanel).*
 5. En la sección **Domains**:
-   - Asigná el dominio HTTPS asignado a tu grupo (ej. `libreria.tudominio.com`).
+   - Asigná el dominio HTTPS asignado a tu grupo: `libreriafront.maximoquiroga.me`.
    - Protocolo interno: **HTTP**
    - Puerto de destino interno: **80**
 6. Presioná **Deploy**.
@@ -131,14 +131,14 @@ El despliegue se organiza en tres servicios dentro del mismo proyecto de Easypan
 1. **Salud del sistema a través de la URL pública:**
    Accedé desde tu navegador a:
    ```text
-   https://<tu-dominio>/api/health/ready
+   https://libreriafront.maximoquiroga.me/api/health/ready
    ```
    Debe responder HTTP `200 OK` con:
    ```json
    {"estado": "listo", "base_de_datos": "conectada"}
    ```
 2. **Navegación en la interfaz gráfica:**
-   - Abrí `https://<tu-dominio>/`
+   - Abrí `https://libreriafront.maximoquiroga.me/`
    - Comprobá que el catálogo cargue los libros sembrados (`Rayuela`, `Respiración artificial`, etc.) con sus autores correspondientes.
    - Hacé clic en "Ver Detalle Completo" para validar la respuesta de `GET /libros/{id}`.
    - Dirigite a **Libros**, creá un nuevo libro con stock y autorías, y verificá que aparezca en el catálogo.
@@ -149,8 +149,11 @@ El despliegue se organiza en tres servicios dentro del mismo proyecto de Easypan
 3. **Batería de pruebas automatizadas contra la URL pública:**
    Desde cualquier máquina con Python:
    ```bash
-   python evidencia/ejecutar_casos_g01_g07.py "https://<tu-dominio>/api"
+   python evidencia/ejecutar_casos_g01_g07.py "https://libreriafront.maximoquiroga.me/api"
    ```
+
+4. **Evidencias del despliegue en Easypanel:**
+   Las capturas de los servicios activos, configuración de dominio/upstream y logs de migraciones se encuentran en `evidencia/` (`EP01_servicios_easypanel.png`, `EP01_deploys_funcionando.png`, `EP02_config_frontend_upstream.png`, `EP02_dominio_frontend.png`, `EP03_backend_logs_migraciones.png`).
 
 ---
 
